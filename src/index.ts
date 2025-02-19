@@ -4,12 +4,14 @@ import { LoginInfo } from "./interfaces";
 export const getBHToken = async (username: string, password: string, clientId: string, clientSecret: string, cluster: string = "emea", ttl = 2880) => {
 
     console.log("Getting BH Token");
+
+    const form = new URLSearchParams();
+    form.append('username', username);
+    form.append('password', password);
+    form.append('action', 'Login');
     // Step 1: Get authorization code
     const authParams = new URLSearchParams({
         client_id: clientId,
-        username,
-        password,
-        action: 'Login',
         response_type: 'code',
     });
     // oauthUrl = 'https://auth-emea9.bullhornstaffing.com/oauth'
@@ -18,7 +20,7 @@ export const getBHToken = async (username: string, password: string, clientId: s
     // const loginUrl = 'https://login.bullhornstaffing.com/oauth/authorize';
 
     const authRequest = `https://auth-${cluster}.bullhornstaffing.com/oauth/authorize?${authParams}`
-    let authResponse = await axios.get(authRequest, {
+    let authResponse = await axios.post(authRequest, form, {
         maxRedirects: 0,
         validateStatus: (status) => {
             return status === 302 || status === 307; // Accept both temporary and permanent redirects
@@ -27,7 +29,7 @@ export const getBHToken = async (username: string, password: string, clientId: s
     if (authResponse.status === 307) {
         console.log("Using invalid cluster, following redirect");
         let correct_url = authResponse.headers['location'];
-        authResponse = await axios.get(correct_url, {
+        authResponse = await axios.post(correct_url, form, {
             maxRedirects: 0,
             validateStatus: (status) => {
                 return status === 302; // Accept both temporary and permanent redirects
