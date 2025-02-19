@@ -1,6 +1,6 @@
 {
   "name": "bullhorn-api-helper",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -11,11 +11,15 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "Authenticate with the Bullhorn REST API",
   "dependencies": {
     "axios": "^1.7.9"
   },
   "devDependencies": {
     "typescript": "^4.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alexvdvalk/bullhorn-api-helper"
   }
 }
