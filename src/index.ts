@@ -8,8 +8,8 @@ export async function getAuthorizationCode(
     cluster: string
 ): Promise<string> {
     const form = new URLSearchParams();
-    form.append('username', username);
-    form.append('password', password);
+    form.append('username', encodeURIComponent(username));
+    form.append('password', encodeURIComponent(password));
     form.append('action', 'Login');
 
     const authParams = new URLSearchParams({
@@ -22,6 +22,8 @@ export async function getAuthorizationCode(
         maxRedirects: 0,
         validateStatus: (status) => status === 302 || status === 307
     });
+
+    // If status code is 200, send the "ACCEPT" response
 
     if (authResponse.status === 307) {
         console.log("Using invalid cluster, following redirect");
@@ -118,9 +120,10 @@ export const getBHToken = async (
             sessionExpires
         };
     } catch (error) {
+        console.error(error);
         throw new Error(
             "Failed to get BH Token, check credentials and try browsing to: " +
-            "https://auth-emea9.bullhornstaffing.com/oauth/authorize?client_id=82bcb8dd-7137-46aa-9515-63ce0ca20d58&response_type=code&username=[username]&password=[password]&action=Login " +
+            "https://auth.bullhornstaffing.com/oauth/authorize?client_id=82bcb8dd-7137-46aa-9515-63ce0ca20d58&response_type=code&username=[username]&password=[password]&action=Login " +
             "and accept the terms and condition"
         );
     }

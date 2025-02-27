@@ -1,0 +1,13 @@
+test.ts
+*.test.ts
+test/
+tests/
+__tests__/
+coverage/
+.github/
+.vscode/
+.idea/
+.git/
+.gitignore
+*.log
+tsconfig.json
