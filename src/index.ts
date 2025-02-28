@@ -8,8 +8,8 @@ export async function getAuthorizationCode(
     cluster: string
 ): Promise<string> {
     const form = new URLSearchParams();
-    form.append('username', encodeURIComponent(username));
-    form.append('password', encodeURIComponent(password));
+    form.append('username', username);
+    form.append('password', password);
     form.append('action', 'Login');
 
     const authParams = new URLSearchParams({
