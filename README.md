@@ -5,7 +5,7 @@ A Node.js module for server-side authentication with the Bullhorn REST API. This
 ## Installation
 
 ```bash
-npm install bullhorn-auth-helper
+npm install bullhorn-api-helper
 ```
 
 ## Features
@@ -21,7 +21,7 @@ npm install bullhorn-auth-helper
 ### Basic Authentication
 
 ```typescript
-import { getBHToken } from "bullhorn-auth-helper";
+import { getBHToken } from "bullhorn-api-helper";
 
 async function authenticate() {
   try {
@@ -48,7 +48,7 @@ async function authenticate() {
 ### Using the BullhornServerSideAuthClient Class
 
 ```typescript
-import { BullhornServerSideAuthClient } from "bullhorn-auth-helper";
+import { BullhornServerSideAuthClient } from "bullhorn-api-helper";
 
 // Create a client instance
 const client = new BullhornServerSideAuthClient(
