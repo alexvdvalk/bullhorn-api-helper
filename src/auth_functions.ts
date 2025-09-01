@@ -123,7 +123,7 @@ export const getBHToken = async (
         console.error(error);
         throw new Error(
             "Failed to get BH Token, check credentials and try browsing to: " +
-            `https://auth.bullhornstaffing.com/oauth/authorize?client_id=&response_type=code&username=[username]&password=[password]&action=Login ` +
+            `https://auth.bullhornstaffing.com/oauth/authorize?client_id=${clientId}&response_type=code&username=[username]&password=[password]&action=Login ` +
             "and accept the terms and condition"
         );
     }
