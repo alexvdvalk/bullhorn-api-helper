@@ -1,3 +1,7 @@
+/**
+ * Bullhorn login info returned from the REST loginInfo endpoint.
+ * Contains URLs for various Bullhorn services and data center identifiers.
+ */
 export interface LoginInfo {
     atsUrl: string;
     billingSyncUrl: string;

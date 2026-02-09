@@ -2,6 +2,11 @@ import axios, { AxiosRequestConfig } from "axios";
 import { getBHToken } from "./auth_functions";
 import cron from 'node-cron';
 import { EventEmitter } from "events";
+
+/**
+ * Server-side Bullhorn client with long-lived session, cron-based refresh, and event notifications.
+ * Use when you need a single shared axios instance and optional automatic token refresh.
+ */
 export class BullhornServerSideAuthClient {
     restUrl: string | undefined;
     BhRestToken: string | undefined;
@@ -11,6 +16,13 @@ export class BullhornServerSideAuthClient {
     loggedIn = false;
     eventEmitter = new EventEmitter();
 
+    /**
+     * @param username - Bullhorn username
+     * @param password - Bullhorn password
+     * @param clientId - OAuth client ID
+     * @param clientSecret - OAuth client secret
+     * @param cluster - Bullhorn cluster (default "emea")
+     */
     constructor(
         private username: string,
         private password: string,
@@ -21,11 +33,21 @@ export class BullhornServerSideAuthClient {
     ) {
     }
 
+    /**
+     * Pings the Bullhorn REST API and returns the session expiry timestamp.
+     *
+     * @returns The session expiry value from the server
+     */
     async ping() {
         const { data } = await this.api.get("/ping", { params: { BhRestToken: this.BhRestToken } });
         return data.sessionExpires;
     }
 
+    /**
+     * Authenticates with Bullhorn and configures the shared axios instance.
+     * Skips if session is still valid and not expiring within 6 hours.
+     * Emits "login" on success or "loginFailed" on error via eventEmitter.
+     */
     async login() {
         // Check if there's an existing session that's about to expire
         if (this.sessionExpires) {
@@ -56,6 +78,13 @@ export class BullhornServerSideAuthClient {
         }
     }
 
+    /**
+     * Starts a cron job that refreshes the token every 30 minutes.
+     * Calls login() immediately, then on the schedule.
+     *
+     * @throws Error if the cron is already started
+     * @returns The scheduled task (for advanced use)
+     */
     async startLoginCron() {
         // Schedule task to run every 30 minutes
         if (this.task) {
@@ -75,6 +104,9 @@ export class BullhornServerSideAuthClient {
         return this.task;
     }
 
+    /**
+     * Stops the automatic login refresh cron job.
+     */
     stopLoginCron() {
         if (this.task) {
             this.task.stop();
@@ -82,6 +114,13 @@ export class BullhornServerSideAuthClient {
         }
     }
 
+    /**
+     * Sends an HTTP request using the authenticated axios instance.
+     *
+     * @param config - Axios request config (url, method, data, etc.)
+     * @returns Axios response promise
+     * @throws Error if not logged in (BhRestToken missing)
+     */
     makeRequest(config: AxiosRequestConfig) {
         if (!this.BhRestToken) {
             throw new Error("Not logged in, try again in a few seconds");

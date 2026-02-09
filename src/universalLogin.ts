@@ -45,6 +45,13 @@ interface Identity {
     departmentName: string;
 }
 
+/**
+ * Authenticates with Bullhorn Universal Login and returns REST token and endpoint.
+ *
+ * @param username - Bullhorn username
+ * @param password - Bullhorn password
+ * @returns Object with BhRestToken and restUrl for REST API calls
+ */
 export const universalLogin = async (username: string, password: string) => {
     let form = new FormData();
     form.append('username', username);
