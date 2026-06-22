@@ -3,3 +3,4 @@ export * from "./interfaces";
 export * from "./BullhornServerSideAuthClient";
 export * from "./universalLogin";
 export * from "./SimpleBullhornAuthClient";
+export * from "./getBullhornAxiosClient";

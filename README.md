@@ -12,6 +12,7 @@ npm install bullhorn-api-helper
 
 - Server-side authentication with Bullhorn REST API
 - Token management with optional caching and automatic refresh
+- **`getBullhornAxiosClient`**: one-shot helper that returns a configured axios instance
 - **SimpleBullhornAuthClient**: lightweight client with 30-minute credential cache and coalesced token fetches
 - **BullhornServerSideAuthClient**: event-based client with shared axios instance and optional cron-based refresh
 - Support for different Bullhorn clusters (US, EMEA, APAC, etc.)
@@ -49,6 +50,26 @@ const simpleToken = await getSimpleBHToken(
 // Resolve cluster for a username
 const cluster = await getCluster("username");
 ```
+
+### getBullhornAxiosClient (one-shot axios instance)
+
+Returns a configured axios instance in a single call. Useful for scripts or one-off requests where you do not need credential caching or session refresh.
+
+```typescript
+import { getBullhornAxiosClient } from "bullhorn-api-helper";
+
+const api = await getBullhornAxiosClient(
+  "username",
+  "password",
+  "clientId",
+  "clientSecret",
+  "emea"
+);
+
+const { data } = await api.get("/entity/Candidate/5");
+```
+
+For repeated requests, prefer `SimpleBullhornAuthClient` (credential cache) or `BullhornServerSideAuthClient` (shared instance + cron refresh).
 
 ### SimpleBullhornAuthClient (recommended for request-scoped usage)
 
@@ -157,6 +178,14 @@ Uses an access token to obtain the REST base URL and BhRestToken.
 #### `universalLogin(username, password)`
 
 Authenticates via Bullhorn Universal Login. Returns `{ BhRestToken, restUrl }`.
+
+#### `getBullhornAxiosClient(username, password, clientId, clientSecret, cluster?)`
+
+Authenticates via `getSimpleBHToken` and returns an axios instance with `baseURL` set to the REST URL and `BhRestToken` attached as a default query parameter.
+
+- **Parameters**: `username`, `password`, `clientId`, `clientSecret`, `cluster` (default `"emea"`)
+- **Returns**: `Promise<AxiosInstance>`
+- **Note**: No credential caching or automatic refresh. Each call performs a full token exchange.
 
 ### Classes
 

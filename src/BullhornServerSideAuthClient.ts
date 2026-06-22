@@ -1,6 +1,6 @@
 import axios, { AxiosRequestConfig } from "axios";
 import { getBHToken } from "./auth_functions";
-import cron from 'node-cron';
+import cron, { ScheduledTask } from 'node-cron';
 import { EventEmitter } from "events";
 
 /**
@@ -10,7 +10,7 @@ import { EventEmitter } from "events";
 export class BullhornServerSideAuthClient {
     restUrl: string | undefined;
     BhRestToken: string | undefined;
-    task: cron.ScheduledTask | undefined;
+    task: ScheduledTask | undefined;
     sessionExpires: Date | undefined;
     api = axios.create();
     loggedIn = false;

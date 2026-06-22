@@ -1,6 +1,10 @@
 import axios from "axios";
 import { LoginInfo } from "./interfaces";
 
+let client = axios.create({
+    timeout: 5000,
+});
+
 /**
  * Exchanges Bullhorn username and password for an OAuth authorization code.
  *
@@ -21,37 +25,41 @@ export async function getAuthorizationCode(
     form.append('password', password);
     form.append('action', 'Login');
 
-    const authParams = new URLSearchParams({
-        client_id: clientId,
-        response_type: 'code',
-    });
-
-    const authRequest = `https://auth-${cluster}.bullhornstaffing.com/oauth/authorize?${authParams}`;
-    let authResponse = await axios.post(authRequest, form, {
-        maxRedirects: 0,
-        validateStatus: (status) => status === 302 || status === 307
-    });
-
-    // If status code is 200, send the "ACCEPT" response
-
-    if (authResponse.status === 307) {
-        console.log("Using invalid cluster, following redirect");
-        const correct_url = authResponse.headers['location'];
-        authResponse = await axios.post(correct_url, form, {
+    const authRequest = `https://auth-${cluster}.bullhornstaffing.com/oauth/authorize`;
+    try {
+        let authResponse = await client.post(authRequest, form, {
+            params: {
+                client_id: clientId,
+                response_type: 'code',
+            },
             maxRedirects: 0,
-            validateStatus: (status) => status === 302
+            validateStatus: (status) => status === 302 || status === 307
         });
+
+        // If status code is 200, send the "ACCEPT" response
+
+        if (authResponse.status === 307) {
+            console.warn("Using invalid cluster, following redirect");
+            const correct_url = authResponse.headers['location'];
+            authResponse = await client.post(correct_url, form, {
+                maxRedirects: 0,
+                validateStatus: (status) => status === 302
+            });
+        }
+
+        const location = authResponse.headers['location'];
+        const locationUrl = new URL(location);
+        const authCode = locationUrl.searchParams.get('code');
+
+        if (!authCode) {
+            throw new Error('No authorization code received');
+        }
+
+        return authCode;
     }
-
-    const location = authResponse.headers['location'];
-    const locationUrl = new URL(location);
-    const authCode = locationUrl.searchParams.get('code');
-
-    if (!authCode) {
-        throw new Error('No authorization code received');
+    catch (error) {
+        throw new Error('Failed to get authorization code');
     }
-
-    return authCode;
 }
 
 /**
@@ -76,7 +84,7 @@ export async function getAccessToken(
         client_secret: clientSecret
     });
 
-    const { data } = await axios.post<{
+    const { data } = await client.post<{
         access_token: string;
         token_type: string;
         expires_in: number;
@@ -99,7 +107,7 @@ export async function getRestTokenAndUrl(
     cluster: string,
     ttl: number
 ): Promise<{ restUrl: string; BhRestToken: string }> {
-    const { data } = await axios.get<{ restUrl: string; BhRestToken: string }>(
+    const { data } = await client.get<{ restUrl: string; BhRestToken: string }>(
         `https://rest-${cluster}.bullhornstaffing.com/rest-services/login`,
         {
             params: {
@@ -116,7 +124,7 @@ async function getSessionExpiry(
     restUrl: string,
     bhRestToken: string
 ): Promise<string> {
-    const { data } = await axios.get<{ sessionExpires: number }>(
+    const { data } = await client.get<{ sessionExpires: number }>(
         `${restUrl}/ping`,
         {
             params: {
@@ -207,7 +215,7 @@ export const getBHToken = async (
  * @returns The cluster identifier string
  */
 export const getCluster = async (username: string) => {
-    const { data } = await axios.get<LoginInfo>(`https://rest.bullhornstaffing.com/rest-services/loginInfo?username=${username}`);
+    const { data } = await client.get<LoginInfo>(`https://rest.bullhornstaffing.com/rest-services/loginInfo?username=${username}`);
     const cluster = data.oauthUrl.split('-')[1].split('.')[0];
     return cluster;
 }
