@@ -39,8 +39,10 @@ export async function getAuthorizationCode(
         // If status code is 200, send the "ACCEPT" response
 
         if (authResponse.status === 307) {
-            console.warn("Using invalid cluster, following redirect");
             const correct_url = authResponse.headers['location'];
+            const correct_cluster = correct_url.split('-')[1].split('.')[0];
+            console.warn("Using invalid cluster, following redirect");
+            console.warn(`Correct cluster: ${correct_cluster}`);
             authResponse = await client.post(correct_url, form, {
                 maxRedirects: 0,
                 validateStatus: (status) => status === 302
@@ -54,12 +56,12 @@ export async function getAuthorizationCode(
         if (!authCode) {
             throw new Error('No authorization code received');
         }
-
         return authCode;
+    } catch (error) {
+        // console.error(error.response.headers);
+        throw (error);
     }
-    catch (error) {
-        throw new Error('Failed to get authorization code');
-    }
+
 }
 
 /**

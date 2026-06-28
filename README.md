@@ -14,7 +14,6 @@ npm install bullhorn-api-helper
 - Token management with optional caching and automatic refresh
 - **`getBullhornAxiosClient`**: one-shot helper that returns a configured axios instance
 - **SimpleBullhornAuthClient**: lightweight client with 30-minute credential cache and coalesced token fetches
-- **BullhornServerSideAuthClient**: event-based client with shared axios instance and optional cron-based refresh
 - Support for different Bullhorn clusters (US, EMEA, APAC, etc.)
 - Universal Login support
 - TypeScript support with full type definitions
@@ -32,7 +31,7 @@ const token = await getBHToken(
   "password",
   "clientId",
   "clientSecret",
-  "emea" // or "us", "apac", etc.
+  "emea", // or "us", "apac", etc.
 );
 console.log("BhRestToken:", token.BhRestToken);
 console.log("REST URL:", token.restUrl);
@@ -44,7 +43,7 @@ const simpleToken = await getSimpleBHToken(
   "password",
   "clientId",
   "clientSecret",
-  "emea"
+  "emea",
 );
 
 // Resolve cluster for a username
@@ -63,13 +62,13 @@ const api = await getBullhornAxiosClient(
   "password",
   "clientId",
   "clientSecret",
-  "emea"
+  "emea",
 );
 
 const { data } = await api.get("/entity/Candidate/5");
 ```
 
-For repeated requests, prefer `SimpleBullhornAuthClient` (credential cache) or `BullhornServerSideAuthClient` (shared instance + cron refresh).
+For repeated requests, prefer `SimpleBullhornAuthClient` (credential cache)
 
 ### SimpleBullhornAuthClient (recommended for request-scoped usage)
 
@@ -83,51 +82,12 @@ const client = new SimpleBullhornAuthClient(
   "password",
   "clientId",
   "clientSecret",
-  "emea"
+  "emea",
 );
 
 // Each call returns a new axios instance (cached credentials if still valid)
 const api = await client.getBullhornAPIClient();
 const response = await api.get("/entity/Candidate/5");
-```
-
-### BullhornServerSideAuthClient (shared axios instance + cron refresh)
-
-Use when you want one shared axios instance and optional automatic token refresh every 30 minutes.
-
-```typescript
-import { BullhornServerSideAuthClient } from "bullhorn-api-helper";
-
-const client = new BullhornServerSideAuthClient(
-  "username",
-  "password",
-  "clientId",
-  "clientSecret",
-  "emea"
-);
-
-// Listen for authentication events
-client.eventEmitter.on("login", (data) => {
-  console.log("Logged in successfully!", data);
-});
-client.eventEmitter.on("loginFailed", (error) => {
-  console.error("Login failed:", error);
-});
-
-// Login (skips if session still valid and not expiring within 6 hours)
-await client.login();
-
-// Use the shared axios instance
-const response = await client.api.get("/entity/Candidate/5");
-
-// Or use makeRequest
-const data = await client.makeRequest({ method: "GET", url: "/entity/Candidate/5" });
-
-// Optional: automatic token refresh every 30 minutes (throws if already started)
-await client.startLoginCron();
-
-// Later
-client.stopLoginCron();
 ```
 
 ### Universal Login
@@ -196,23 +156,6 @@ Lightweight client that returns a fresh axios instance per call. Caches credenti
 - **Constructor**: `new SimpleBullhornAuthClient(username, password, clientId, clientSecret, cluster?)`
 - **Methods**:
   - **`getBullhornAPIClient()`**: Returns a Promise of an axios instance configured with Bullhorn REST URL and BhRestToken. Uses cache if still valid; otherwise fetches a new token (single in-flight fetch for concurrent callers).
-
-#### `BullhornServerSideAuthClient`
-
-Manages Bullhorn authentication with a shared axios instance and optional cron-based refresh.
-
-- **Constructor**: `new BullhornServerSideAuthClient(username, password, clientId, clientSecret, cluster?)`
-- **Properties**:
-  - `api`: Axios instance (configured after `login()`)
-  - `loggedIn`: Boolean
-  - `restUrl`, `BhRestToken`, `sessionExpires`: Set after login
-  - `eventEmitter`: Node `EventEmitter` for `"login"` and `"loginFailed"` events
-- **Methods**:
-  - **`login()`**: Authenticates and configures `api`. Skips if session still valid and not expiring within 6 hours.
-  - **`ping()`**: Pings the REST API and returns the session expiry from the server.
-  - **`startLoginCron()`**: Starts a cron that refreshes the token every 30 minutes. Calls `login()` immediately. Throws if cron already started.
-  - **`stopLoginCron()`**: Stops the refresh cron.
-  - **`makeRequest(config)`**: Sends a request using the authenticated axios instance. Throws if not logged in.
 
 ### Interfaces
 
