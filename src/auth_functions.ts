@@ -3,6 +3,10 @@ import { LoginInfo } from "./interfaces";
 
 let client = axios.create({
     timeout: 5000,
+    adapter: "fetch",
+    fetchOptions: {
+        redirect: 'manual', // Stems the native redirect loop completely
+    },
 });
 
 /**
